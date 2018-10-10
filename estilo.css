@@ -1,0 +1,246 @@
+@charset "UTF-8";
+/* Style for Leap Tracer app */
+body {
+	font-family: Arial, Verdana;
+	/* The first font in this list available on the user's system will be used */
+}
+
+/* add this style to _all_ h1 elements */
+h1 {
+	text-align: center;
+	margin: 0px; /* 0 pixel margin all around the h1 element */
+	color: #4e5a98; /* this is a hexadecimal code for a purple color.*/
+	font-size: 36px;
+	text-shadow: 2px 2px 2px #999;
+	/* horizontal-shadow vertical-shadow blur-radius color */
+}
+
+h2 {
+	text-align: center;
+	margin: 0px;
+	font-style: italic;
+	font-size: 18px;
+}
+
+h3 {
+	color: blue; /* can also use text to refer to basic colors */
+	text-align: center;
+}
+
+canvas {
+	display: block; /* element will stretch left/right as far as it can */
+	border: solid gray 1px;
+	box-shadow: 2px 2px 2px #999;
+	/* horizontal-shadow vertical-shadow blur-radius color */
+	margin: 5px auto;
+	/* top & bottom 5px each, left&right auto means horizontally centered */
+	z-index: 999;
+	width: 50% !important;
+	height: 70% !important;
+	top: 20% !important;
+	left: 400px !important;
+}
+
+form.example input[type=text] {
+	padding: 10px;
+	font-size: 17px;
+	border: 1px solid grey;
+	float: left;
+	width: 80%;
+	background: #f1f1f1;
+}
+
+form.example button {
+	float: left;
+	width: 20%;
+	padding: 10px;
+	background: #2196F3;
+	color: white;
+	font-size: 17px;
+	border: 1px solid grey;
+	border-left: none;
+	cursor: pointer;
+}
+
+form.example button:hover {
+	background: #0b7dda;
+}
+
+form.example::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+#datos {
+	position: absolute;
+	top: 20% !important;
+	left: 10px !important;
+	border: 2px solid brown;
+	width: 350px;
+	height: 260px;
+}
+
+#calculos {
+	position: absolute;
+	top: 50% !important;
+	left: 10px !important;
+	border: 2px solid brown;
+	width: 350px;
+	height: 400px;
+}
+
+#controls {
+	position: fixed;
+	top: 30px;
+	left: 70%;
+	width: 100%;
+	text-align: center;
+	z-index: 20;
+}
+
+.hotkey {
+	text-decoration: underline;
+}
+
+.help-modal-control {
+	color: #005d98;
+	padding: 8px;
+	font-size: 29px;
+	margin-left: -45px;
+	-webkit-transition: color 0.1s ease-out;
+	transition: color 0.1s ease-out;
+}
+
+.help-modal-control:hover {
+	color: #0088ce;
+}
+
+.btn.btn-double {
+	-webkit-transform: scale(2, 2);
+	-ms-transform: scale(2, 2);
+	transform: scale(2, 2);
+	color: #555;
+	border-radius: 6px;
+}
+
+#propiedades {
+	position: fixed;
+	top: 100px;
+	left: 35%;
+	width: 100%;
+	text-align: center;
+	z-index: 20;
+}
+
+#areadatos {
+	position: absolute;
+	top: 20% !important;
+	left: 75% !important;
+	border: 2px solid brown;
+	width: 350px;
+	height: 300px;
+	overflow-y: scroll;
+	overflow-x: scroll;
+}
+#tituloareadatos {
+	position: absolute;
+	top: 16% !important;
+	left: 75% !important;
+
+	width: 350px;
+	height: 40px;
+	
+}
+#botones {
+	position: relative;
+	top: 60% !important;
+	left: 75% !important;
+
+
+}
+#ficheroSal{
+
+	top: 70% !important;
+	left: 75% !important;
+	float: left;
+	width: 20%;
+	padding: 10px;
+
+	font-size: 17px;
+	border: 1px solid grey;
+	cursor: pointer;
+
+
+}
+ #files{
+
+	top: 60% !important;
+	left: 75% !important;
+	float: left;
+	width: 20%;
+	padding: 10px;
+
+	font-size: 17px;
+	border: 1px solid grey;
+	cursor: pointer;
+
+
+}
+#ficheroSalMin{
+
+	top: 70% !important;
+	left: 75% !important;
+	float: left;
+	width: 100%;
+	padding: 10px;
+
+	font-size: 15px;
+	border: 1px solid grey;
+	cursor: pointer;
+
+
+}
+
+  
+ #chart_div{
+ 	top: 50% !important;
+	left: 25% !important;
+	width:80%;
+	position: relative;
+}
+#ficheroSalMinGraf{
+
+	top: 20% !important;
+	left: 75% !important;
+
+	width: 40%;
+	padding: 10px;
+
+	font-size: 15px;
+	border: 1px solid grey;
+	cursor: pointer;
+
+
+}
+.boton_personalizado{
+    text-decoration: none;
+    padding: 10px;
+    font-weight: 600;
+    font-size: 20px;
+    color: #ffffff;
+    background-color: #4e5a98;
+    border-radius: 6px;
+    border: 2px solid #4e5a98;
+    position: relative;
+    left: 80%;
+  }
+  a, a:hover
+{ background: transparent;
+  outline: none;
+  text-decoration: underline;
+  color: #2091FF;}
+
+a:hover
+{ text-decoration: underline;
+  color: #5D5D5D;}

@@ -1,0 +1,627 @@
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title></title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script><script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r69/three.js"></script><script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script><script src="http://js.leapmotion.com/leap.rigged-hand-0.1.5.min.js"></script><script src="https://leapmotion.github.io/leapjs-widgets/examples/js/leap-plugins-0.1.11pre.js"></script>
+	<link href="estilo.css" rel="stylesheet" type="text/css" />
+</head>
+<body onload="init()">
+<h1>LeapMotion</h1>
+
+<h2>Centro de Pruebas</h2>
+<div id="menubar">
+
+<a class="boton_personalizado" href="">LOGS</a>
+<a class="boton_personalizado" href="grafico.html"><u>AN&Aacute;LISIS</u></a>
+
+</div>
+<div id="propiedades">
+<div style="float: left;"><label>Rotation: <span id="rotationOutput">0</span>&pi; </label><br />
+<input id="rotationInput" max="1" min="-1" step="0.001" type="range" value="0" /></div>
+
+<div style="float: left;"><label>Z Position: <span id="positionOutput">0</span></label><br />
+<input id="positionInput" max="300" min="-1000" step="1" type="range" value="0" /></div>
+
+<div style="float: left;"><label>Scale: <span id="scaleOutput">0.3</span></label><br />
+<input id="scaleInput" max="1" min="0.1" step="0.01" type="range" value="0.3" /></div>
+
+<div style="float: left; padding: 10px"><button id="showHide">Show/Hide</button></div>
+</div>
+
+<div id="datos">
+<div id="handData">&nbsp;</div>
+</div>
+
+<div id="calculos">
+<div id="pointableData">&nbsp;</div>
+&nbsp;
+
+<div id="minimos">&nbsp;</div>
+
+<h3>Guardar datos m&iacute;nimos</h3>
+<input id="ficheroSalMin" placeholder="Grabar mínimos" type="file" /></div>
+
+<div id="tituloareaDatos">
+<h2>&nbsp;</h2>
+
+<h2>Logs de datos - sesi&oacute;n</h2>
+
+<h2>An&aacute;lisis de Datos</h2>
+</div>
+
+<div id="areaDatos">
+
+</div>
+
+<div id="controls">&nbsp;</div>
+
+<div class="btn-group btn-group-lg dropup" id="botones">
+<form action="javascript:record();" class="example"><button class="btn btn-default" id="record" type="submit">Guardar Sesi&oacute;n</button></form>
+
+<form action="javascript:save();" class="example"><button class="btn btn-default" type="submit">Salvar Sesi&oacute;n</button></form>
+<input id="ficheroSal" placeholder="Nombre del fichero de salida" type="text" /></div>
+</body>
+<script type="text/javascript">
+	// Store frame for motion functions
+	var previousFrame = null;
+	var paused = false;
+	var pauseOnGesture = false;
+	var grabando = false;
+
+	var minPulgarIndice=100;
+	var minPulgarMedio=100;
+	var minPulgarAnular=100;
+	var minPulgarMenique=100;
+	// Setup Leap loop with frame callback function
+	
+	function record(){
+		
+		if (grabando){
+			grabando = false;
+			$('#record')[0].innerHTML='Record';
+		}else{
+			grabando = true;
+			$('#record')[0].innerHTML='Pause';
+		}
+	}
+	function save(){
+		
+		
+		  var contenido = $('#areaDatos')[0].innerHTML;
+		  var nombre =$('#ficheroSal')[0].value;
+		  
+		  if (nombre=="") nombre="sesion.txt";
+		  else nombre=nombre+".txt";
+		  
+		  var a = document.createElement('a');
+		  a.setAttribute('href', 'data:text/plain;charset=utf-u,'+encodeURIComponent(contenido));
+		  a.setAttribute('download', nombre);
+		  a.click()
+		  $('#areaDatos')[0].innerHTML="";
+		}
+	
+	function saveMinimos(e) {
+		var contenido="";
+		 var archivo = e.target.files[0];
+		  if (!archivo) {
+		    return;
+		  }
+		  var lector = new FileReader();
+		  lector.onload = function(e) {
+		      contenido = e.target.result;
+		  }
+		  lector.readAsText(archivo);
+		  
+		  var result = contenido.split("],");     
+		  contenido=contenido+"[\""+(result.length-1)+"\","+ minPulgarIndice+","+minPulgarMedio+","+minPulgarAnular+","+minPulgarMenique+"],";
+		  
+		  var nombres= archivo.name.split(" ")
+		  var nombre =nombres[0];
+
+		  
+		  var a = document.createElement('a');
+		  a.setAttribute('href', 'data:text/plain;charset=utf-u,'+encodeURIComponent(contenido));
+		  a.setAttribute('download', nombre+".txt");
+		  a.click()
+		
+
+	}
+	
+	var controllerOptions = {
+		enableGestures : true
+	};
+
+	// to use HMD mode:
+	// controllerOptions.optimizeHMD = true;
+	var output = document.getElementById('output'), progress = document
+			.getElementById('progress');
+	
+	 // all units in mm
+	  var initScene = function () {
+	    window.scene = new THREE.Scene();
+	    window.renderer = new THREE.WebGLRenderer({
+	      alpha: true
+	    });
+
+	    window.renderer.setClearColor(0x000000, 0);
+	    window.renderer.setSize(window.innerWidth, window.innerHeight);
+
+	    window.renderer.domElement.style.position = 'fixed';
+	    window.renderer.domElement.style.top = 0;
+	    window.renderer.domElement.style.left = 0;
+	    window.renderer.domElement.style.width = '100%';
+	    window.renderer.domElement.style.height = '100%';
+
+	    document.body.appendChild(window.renderer.domElement);
+
+	    window.scene.add(new THREE.AmbientLight(0x888888));
+
+	    var pointLight = new THREE.PointLight(0xFFffff);
+	    pointLight.position = new THREE.Vector3(-20, 10, 100);
+	    pointLight.lookAt(new THREE.Vector3(0, 0, 0));
+	    window.scene.add(pointLight);
+
+	    window.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+	    window.camera.position.fromArray([0, 160, 400]);
+	    window.camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+	    window.addEventListener('resize', function () {
+
+	      camera.aspect = window.innerWidth / window.innerHeight;
+	      camera.updateProjectionMatrix();
+	      renderer.setSize(window.innerWidth, window.innerHeight);
+	      renderer.render(scene, camera);
+
+	    }, false);
+
+	    scene.add(camera);
+
+
+	    renderer.render(scene, camera);
+	  };
+
+	  initScene();
+
+
+	
+	
+	
+	
+	// Set up the controller:
+
+	Leap
+			.loop(
+					function(frame) {
+						// Display Hand object data
+						latestFrame = frame;
+						var textarea = document.getElementById("areaDatos");
+						if ( frame.hands.length > 0 && frame.pointables.length > 0 && grabando) {
+							status = '*** Recording *** bytes recorded: ';
+							textarea.innerHTML += JSON.stringify( frame.data ) + ',\n\n';
+						}
+						
+						var handOutput = document.getElementById("handData");
+						var handString = "<h2>Información Mano</h2>";
+						for (var i = 0; i < frame.hands.length; i++) {
+							var hand = frame.hands[i];
+
+							handString += "Hand ID: " + hand.id + "<br />";
+							handString += "Type: " + hand.type + " hand"
+									+ "<br />";
+							handString += "Direction: "
+									+ vectorToString(hand.direction, 2)
+									+ "<br />";
+							handString += "Palm position: "
+									+ vectorToString(hand.palmPosition)
+									+ " mm<br />";
+							handString += "Grab strength: " + hand.grabStrength
+									+ "<br />";
+							handString += "Pinch strength: "
+									+ hand.pinchStrength + "<br />";
+							handString += "Confidence: " + hand.confidence
+									+ "<br />";
+							handString += "Arm direction: "
+									+ vectorToString(hand.arm.direction())
+									+ "<br />";
+							handString += "Arm center: "
+									+ vectorToString(hand.arm.center())
+									+ "<br />";
+							handString += "Arm up vector: "
+									+ vectorToString(hand.arm.basis[1])
+									+ "<br />";
+
+							// Hand motion factors
+							if (previousFrame && previousFrame.valid) {
+								var translation = hand
+										.translation(previousFrame);
+								handString += "Translation: "
+										+ vectorToString(translation)
+										+ " mm<br />";
+
+								var rotationAxis = hand.rotationAxis(
+										previousFrame, 2);
+								var rotationAngle = hand
+										.rotationAngle(previousFrame);
+								handString += "Rotation axis: "
+										+ vectorToString(rotationAxis)
+										+ "<br />";
+								handString += "Rotation angle: "
+										+ rotationAngle.toFixed(2)
+										+ " radians<br />";
+
+								var scaleFactor = hand
+										.scaleFactor(previousFrame);
+								handString += "Scale factor: "
+										+ scaleFactor.toFixed(2) + "<br />";
+							}
+
+							// IDs of pointables associated with this hand
+							if (hand.pointables.length > 0) {
+								var fingerIds = [];
+								for (var j = 0; j < hand.pointables.length; j++) {
+									var pointable = hand.pointables[j];
+									fingerIds.push(pointable.id);
+								}
+								if (fingerIds.length > 0) {
+									handString += "Fingers IDs: "
+											+ fingerIds.join(", ") + "<br />";
+								}
+							}
+
+						}
+						handString += "<br /><br />";
+						handOutput.innerHTML = handString;
+
+						///info de los dedos
+
+						var pointableOutput = document
+								.getElementById("pointableData");
+						var pointableString = "<h2>Información Falanges</h2>";
+						var vectorPulgar;
+						var vectorIndice;
+						var vectorMedio;
+						var vectorAnular;
+						var vectorMenique;
+
+						if (frame.pointables.length > 0) {
+							var fingerTypeMap = [ "Pulgar", "Indice", "Medio",
+									"Anular", "Menique" ];
+							var boneTypeMap = [ "Metacarpal",
+									"Proximal phalanx", "Intermediate phalanx",
+									"Distal phalanx" ];
+							for (var i = 0; i < frame.pointables.length; i++) {
+								var pointable = frame.pointables[i];
+
+								/*    pointableString += "Pointable ID: " + pointable.id + "<br />";
+								    pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
+								    pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+								
+								    pointable.bones.forEach( function(bone){
+								      pointableString += boneTypeMap[bone.type] + " bone <br />"; bone.
+								      pointableString += "Center: " + vectorToString(bone.center()) + "<br />";
+								      pointableString += "Direction: " + vectorToString(bone.direction()) + "<br />";
+								      pointableString += "Up vector: " + vectorToString(bone.basis[1]) + "<br />";
+								    });*/
+								// pointableString += "Posicion "+fingerTypeMap[pointable.type] +" :" + vectorToString(pointable.tipPosition) + " mm<br />";
+
+								if ("Pulgar" == fingerTypeMap[pointable.type]) {
+									vectorPulgar = pointable.tipPosition;
+								}
+								if ("Indice" == fingerTypeMap[pointable.type]) {
+									vectorIndice = pointable.tipPosition;
+								}
+								if ("Medio" == fingerTypeMap[pointable.type]) {
+									vectorMedio = pointable.tipPosition;
+								}
+								if ("Anular" == fingerTypeMap[pointable.type]) {
+									vectorAnular = pointable.tipPosition;
+								}
+								if ("Menique" == fingerTypeMap[pointable.type]) {
+									vectorMenique = pointable.tipPosition;
+								}
+
+							}
+							
+							if (parseFloat(distancia(vectorPulgar, vectorIndice)) < parseFloat(minPulgarIndice)){
+								
+								minPulgarIndice = distancia(vectorPulgar, vectorIndice);
+							} 
+							if (parseFloat(distancia(vectorPulgar, vectorMedio)) < parseFloat(minPulgarMedio)){
+								minPulgarMedio = distancia(vectorPulgar, vectorMedio);
+							} 
+							if (parseFloat(distancia(vectorPulgar, vectorAnular)) < parseFloat(minPulgarAnular)){
+								minPulgarAnular = distancia(vectorPulgar, vectorAnular);
+							} 
+							if (parseFloat(distancia(vectorPulgar, vectorMenique)) < parseFloat(minPulgarMenique)){
+								minPulgarMenique = distancia(vectorPulgar, vectorMenique);
+							} 
+							/* pointableString += "<table align='center' border='2' style='width:350px;'>";
+							pointableString += "<thead>";
+							pointableString += "<tr>";
+							pointableString += "		<th scope='col'> </th>";
+							pointableString += "		<th scope='col'>POSICION</th>";
+							pointableString += "	</tr>";
+							pointableString += "</thead>";
+							pointableString += "<tbody>";
+							pointableString += "	<tr>";
+							pointableString += "		<td>Anular</td>";
+							pointableString += "		<td>" + vectorAnular
+									+ "</td>";
+							pointableString += "	</tr>";
+							pointableString += "	<tr>";
+							pointableString += "		<td>Indice</td>";
+							pointableString += "		<td>" + vectorIndice
+									+ "</td>";
+							pointableString += "	</tr>";
+							pointableString += "	<tr>";
+							pointableString += "	<td>Medio</td>";
+							pointableString += "	<td>" + vectorMedio + "</td>";
+							pointableString += "	</tr>";
+							pointableString += "	<tr>";
+							pointableString += "		<td>Anular</td>";
+							pointableString += "		<td>" + vectorAnular
+									+ ";</td>";
+							pointableString += "	</tr>";
+							pointableString += "	<tr>";
+							pointableString += "	<td>Meñique</td>";
+							pointableString += "	<td>" + vectorMenique
+									+ "</td>";
+							pointableString += "	</tr>";
+							pointableString += "</tbody>";
+							pointableString += "  </table>"; */
+							pointableString += "  <br><br><br>";
+							pointableString += "<table style='height: 173px;' border='2' width='350px'>";
+							pointableString += "<tbody>";
+							pointableString += "<tr>";
+							pointableString += "<td style='width: 175px; text-align: center;'><strong>Distancia</strong></td>";
+							pointableString += "<td style='width: 176px; text-align: center;'>Pulgar</td>";
+							pointableString += "<td style='width: 176px; text-align: center;'>Mínimo</td>";
+							pointableString += "</tr>";
+							pointableString += "<tr>";
+							pointableString += "<td style='width: 175px;'>Indice</td>";
+							pointableString += "<td style='width: 176px;'>"
+									+ distancia(vectorPulgar, vectorIndice)
+									+ "</td>";
+							pointableString += "<td style='width: 176px;'>"
+										+ minPulgarIndice
+										+ "</td>";
+							pointableString += "</tr>";
+							pointableString += "<tr>";
+							pointableString += "<td style='width: 175px;'>Medio</td>";
+							pointableString += "<td style='width: 176px;'>"
+									+ distancia(vectorPulgar, vectorMedio)
+									+ "</td>";
+							pointableString += "<td style='width: 176px;'>"
+										+ minPulgarMedio
+										+ "</td>";
+							pointableString += "</tr>";
+							pointableString += "<tr>";
+							pointableString += "<td style='width: 175px;'>Anular</td>";
+							pointableString += "<td style='width: 176px;'>"
+									+ distancia(vectorPulgar, vectorAnular)
+									+ "</td>";
+							pointableString += "<td style='width: 176px;'>"
+										+ minPulgarAnular
+										+ "</td>";
+							pointableString += " </tr>";
+							pointableString += "<tr>";
+							pointableString += "<td style='width: 175px;'>Meñique</td>";
+							pointableString += "<td style='width: 176px;'>"
+									+ distancia(vectorPulgar, vectorMenique)
+									+ "</td>";
+							pointableString += "<td style='width: 176px;'>"
+										+ minPulgarMenique
+										+ "</td>";
+							pointableString += "</tr>";
+							pointableString += "</tbody>";
+							pointableString += "</table>";
+						}
+
+						pointableOutput.innerHTML = pointableString;
+
+					})
+					
+		 .use('transform', {
+			    quaternion: new THREE.Quaternion,
+			    position: new THREE.Vector3,
+			    scale: 0.3
+			  })
+
+
+					//Hand Entry Emit events when a hand enters of leaves the field of view.
+			.use('handEntry')
+			
+				.on('handFound', function(hand) {
+					console.log('hand found', hand);
+					document.getElementById("minimos").innerHTML = "";
+					
+					})
+				.on('handLost', function(hand) {
+					console.log('hand lost', hand);
+					
+					 var pointableString = "<table style='height: 173px;' border='2' width='350px'>";
+					pointableString += "<tbody>";
+					pointableString += "<tr>";
+					pointableString += "<td style='width: 175px; text-align: center;'><strong>Distancia</strong></td>";
+					pointableString += "<td style='width: 176px; text-align: center;'>Mínimo</td>";
+					pointableString += "</tr>";
+					pointableString += "<tr>";
+					pointableString += "<td style='width: 175px;'>Indice</td>";
+					pointableString += "<td style='width: 176px;'>"
+								+ minPulgarIndice
+								+ "</td>";
+					pointableString += "</tr>";
+					pointableString += "<tr>";
+					pointableString += "<td style='width: 175px;'>Medio</td>";
+					pointableString += "<td style='width: 176px;'>"
+								+ minPulgarMedio
+								+ "</td>";
+					pointableString += "</tr>";
+					pointableString += "<tr>";
+					pointableString += "<td style='width: 175px;'>Anular</td>";
+					pointableString += "<td style='width: 176px;'>"
+								+ minPulgarAnular
+								+ "</td>";
+					pointableString += " </tr>";
+					pointableString += "<tr>";
+					pointableString += "<td style='width: 175px;'>Meñique</td>";
+					pointableString += "<td style='width: 176px;'>"
+								+ minPulgarMenique
+								+ "</td>";
+					pointableString += "</tr>";
+					pointableString += "</tbody>";
+					pointableString += "</table>";
+					document.getElementById("minimos").innerHTML = pointableString;
+				
+			
+					
+				});
+
+	//Playback Record hand-data from the Leap, compress it, and use it to animate your app.
+	  visualizeHand = function(controller) {
+
+		controller.use('playback', {
+		     recording: $('#areaDatos').innerHTML,
+			loop : true,
+			pauseHotkey : false,
+			pauseOnHand : false,
+			autoPlay:true
+		})
+		
+		//riggedHand.meshAdded and riggedHand.meshRemoved are available. 
+		//These may be useful to customize behaviors of the hand or change defaults. By default, material.opacity == 0.7, 
+		//material.depthTest == true, and handMesh.castShadow == true, but these could be customized in the event callback.
+		
+		.on('riggedHand.meshAdded', function(handMesh, leapHand) {
+			handMesh.material.opacity = 1;
+		})
+				//Rigged Hand Easily add virtual 3d hands to any web page with THREE.js.
+
+		.use('riggedHand', {
+			scale : 1.9,
+			 parent: scene,
+			 renderFn: function(){
+			      renderer.render(scene, camera);
+			    },
+					//muestra la mano con poligonos
+			materialOptions: {
+		//	      wireframe: true,
+			      color: new THREE.Color(0x734704)
+			    }
+
+		})
+
+		.connect();
+	  
+
+	};
+	visualizeHand(Leap.loopController);
+	
+	
+	window.transformPlugin = Leap.loopController.plugins.transform;
+
+
+
+	function vectorToString(vector, digits) {
+		if (typeof digits === "undefined") {
+			digits = 1;
+		}
+		return "(" + vector[0].toFixed(digits) + ", "
+				+ vector[1].toFixed(digits) + ", " + vector[2].toFixed(digits)
+				+ ")";
+	}
+
+	function distancia(A, B) {
+
+		return Math.sqrt(
+				Math.pow((B[0].toFixed(1) - A[0].toFixed(1)), 2)
+						+ Math.pow((B[1].toFixed(1) - A[1].toFixed(1)), 2)
+						+ Math.pow((B[2].toFixed(1) - A[2].toFixed(1)), 2))
+				.toFixed(1);
+
+	}
+
+
+
+	
+	  function handleFileSelect(evt) {
+	    var files = evt.target.files; // FileList object
+
+	    // files is a FileList of File objects. List some properties.
+	    var output = [];
+	    for (var i = 0, f; f = files[i]; i++) {
+	      output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+	                  f.size, ' bytes, last modified: ',
+	                  f.lastModifiedDate.toLocaleDateString(), '</li>');
+	      
+	      var reader = new FileReader();
+
+	      // Closure to capture the file information.
+	      reader.onload = (function(theFile) {
+	        return function(e) {
+	          // Render thumbnail.
+	          var span = document.createElement('span');
+	          $('#areaDatos')[0].innerHTML =  e.target.result;
+	  
+	        };
+	      })(f);
+
+	    
+	     reader.readAsText(f);
+	    }
+	    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+	  }
+
+	
+
+	
+	function init(){
+		console.log("init");
+		  document.getElementById('rotationInput').oninput = function(e){
+			  console.log("rotacion");
+		    var value = e.target.value;
+		    transformPlugin.quaternion.setFromEuler(
+		        new THREE.Euler(0, Math.PI * parseFloat(value,10) , 0)
+		    );
+		    document.getElementById('rotationOutput').innerHTML = value;
+		  };
+
+		  document.getElementById('positionInput').oninput = function(e){
+		    var value = e.target.value;
+		    transformPlugin.position.set(
+		        0,0,parseInt(value, 10)
+		    );
+		    document.getElementById('positionOutput').innerHTML = value;
+		  };
+
+		  document.getElementById('scaleInput').oninput = function(e){
+		    var value = parseFloat(e.target.value,10);
+		    transformPlugin.scale.set(
+		        value, value, value
+		    );
+		    document.getElementById('scaleOutput').innerHTML = value;
+		  };
+
+		  document.getElementById('showHide').onclick = function(){
+		    var el = document.querySelector('canvas');
+		    if (el.style.display == 'none'){
+		      el.style.display = 'block'
+		    }else {
+		      el.style.display = 'none'
+		    }
+		  }
+		  
+		  document.getElementById('ficheroSalMin')
+		  .addEventListener('change', saveMinimos, false);
+		  
+		  
+		// Check for the various File API support.
+		  if (window.File && window.FileReader && window.FileList && window.Blob) {
+		    // Great success! All the File APIs are supported.
+			  
+		  } else {
+		    alert('The File APIs are not fully supported in this browser.');
+		  }
+		
+	}
+</script></html>

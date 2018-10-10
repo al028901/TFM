@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+	<link href="estilo.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+ <script type="text/javascript">
+ 
+ 
+
+ 
+ 
+ google.charts.load('current', {packages: ['corechart', 'line']});
+
+function init(){
+	 document.getElementById('ficheroSalMinGraf').addEventListener('change', cargarDatos, false);	
+	
+}
+ function cargarDatos(e) {
+		var contenido="";
+		 var archivo = e.target.files[0];
+		  if (!archivo) {
+		    return;
+		  }
+		  var lector = new FileReader();
+		  lector.onload = function(e) {
+		      contenido = e.target.result;
+		  }
+		  lector.readAsText(archivo);
+		  
+		  drawCurveTypes(lector.result);
+		
+
+	}
+	
+ 
+ function drawCurveTypes(contenido) {
+       var data = new google.visualization.DataTable();
+       
+       data.addColumn('string', 'X');
+       data.addColumn('number', 'Indice');
+       data.addColumn('number', 'Pulgar');
+       data.addColumn('number', 'Anular');
+       data.addColumn('number', 'Meñique');
+       
+      console.log(contenido);
+   		contenido = contenido.substring(0,contenido.length-1)
+   	
+      var datos = JSON.parse("[" + contenido + "]");
+      console.log(datos);
+     // var datos=[['0',0.3,3.0,1.8,3.5],['1',0.3,1.4,1.8,3.5],['2',2.3,6.4,0.8,5.5],['3',1.3,1.4,2.8,7.5],['4',0.3,1.4,1.8,3.5]];
+       data.addRows(datos);
+
+       var options = {
+         hAxis: { title: 'Distancia con el Pulgar'},
+         vAxis: { title: 'Dedos',scaleType: 'linear',},
+         tooltip: {isHtml: true},
+       	 lineWidth: 5,
+         legend: { position: 'bottom' },
+        
+       };
+
+       var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+       chart.draw(data, options);
+     }
+ 
+ </script> 
+</head>
+<body onload="init()">
+<h1>LeapMotion</h1>
+
+<h2>Centro de Pruebas</h2>
+<div id="menubar">
+
+<a class="boton_personalizado" href="index.html"><u>LOGS</u></a>
+<a class="boton_personalizado" href="">AN&Aacute;LISIS</a>
+
+</div>
+<br>
+<h3>Cargar Datos</h3>
+<input id="ficheroSalMinGraf" placeholder="Cargar datos" type="file" /></div>
+
+  <div id="chart_div" style="width: 1300px; height: 700px"></div>
+</body>
+</html>
+
