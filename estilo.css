@@ -204,10 +204,10 @@ form.example::after {
 
   
  #chart_div{
- 	top: 50% !important;
-	left: 25% !important;
+ 	top: 25% !important;
+	left: 5% !important;
 	width:80%;
-	position: relative;
+	position: absolute;
 }
 #ficheroSalMinGraf{
 
