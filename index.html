@@ -2,7 +2,8 @@
 <head>
 	<meta charset="UTF-8" />
 	<title></title>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script><script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r69/three.js"></script><script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script><script src="http://js.leapmotion.com/leap.rigged-hand-0.1.5.min.js"></script><script src="https://leapmotion.github.io/leapjs-widgets/examples/js/leap-plugins-0.1.11pre.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r69/three.js"></script><script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script><script src="http://js.leapmotion.com/leap.rigged-hand-0.1.5.min.js"></script><script src="https://leapmotion.github.io/leapjs-widgets/examples/js/leap-plugins-0.1.11pre.js"></script>
 	<link href="estilo.css" rel="stylesheet" type="text/css" />
 </head>
 <body onload="init()">
@@ -11,8 +12,9 @@
 <h2>Centro de Pruebas</h2>
 <div id="menubar">
 
-<a class="boton_personalizado" href="">LOGS</a>
-<a class="boton_personalizado" href="grafico.html"><u>AN&Aacute;LISIS</u></a>
+<a class="boton_personalizado" href="javascript:reload()">RELOAD</a>
+<a class="boton_personalizado" href="">CAPTURA</a>
+<a class="boton_personalizado" href="grafico.html"><span style="text-decoration: underline;">AN&Aacute;LISIS</span></a>
 
 </div>
 <div id="propiedades">
@@ -38,15 +40,14 @@
 
 <div id="minimos">&nbsp;</div>
 
-<h3>Guardar datos m&iacute;nimos</h3>
-<input id="ficheroSalMin" placeholder="Grabar mínimos" type="file" /></div>
+<h3>Guardar cálculos</h3>
+<input id="ficheroSalMin" placeholder="Guardar cálculos" type="file" /></div>
 
 <div id="tituloareaDatos">
 <h2>&nbsp;</h2>
 
 <h2>Logs de datos - sesi&oacute;n</h2>
 
-<h2>An&aacute;lisis de Datos</h2>
 </div>
 
 <div id="areaDatos">
@@ -56,9 +57,9 @@
 <div id="controls">&nbsp;</div>
 
 <div class="btn-group btn-group-lg dropup" id="botones">
-<form action="javascript:record();" class="example"><button class="btn btn-default" id="record" type="submit">Guardar Sesi&oacute;n</button></form>
+<form action="javascript:record();" class="example"><button class="btn btn-default" id="record" type="submit">Capturar Sesi&oacute;n</button></form>
 
-<form action="javascript:save();" class="example"><button class="btn btn-default" type="submit">Salvar Sesi&oacute;n</button></form>
+<form action="javascript:save();" class="example"><button class="btn btn-default" type="submit">Guardar Sesi&oacute;n</button></form>
 <input id="ficheroSal" placeholder="Nombre del fichero de salida" type="text" /></div>
 </body>
 <script type="text/javascript">
@@ -74,6 +75,10 @@
 	var minPulgarMenique=100;
 	// Setup Leap loop with frame callback function
 	
+	function reload(){
+		
+		location.reload();
+	}
 	function record(){
 		
 		if (grabando){
@@ -535,8 +540,7 @@
 
 		return Math.sqrt(
 				Math.pow((B[0].toFixed(1) - A[0].toFixed(1)), 2)
-						+ Math.pow((B[1].toFixed(1) - A[1].toFixed(1)), 2)
-						+ Math.pow((B[2].toFixed(1) - A[2].toFixed(1)), 2))
+						+ Math.pow((B[1].toFixed(1) - A[1].toFixed(1)), 2))
 				.toFixed(1);
 
 	}

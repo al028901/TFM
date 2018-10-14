@@ -5,56 +5,57 @@
 <title>Insert title here</title>
 	<link href="estilo.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
  <script type="text/javascript">
  
  
 
  
  
- google.charts.load('current', {packages: ['corechart', 'line']});
+ google.charts.load('current', {packages: ['corechart', 'line','bar']});
+
 
 function init(){
-	 document.getElementById('ficheroSalMinGraf').addEventListener('change', cargarDatos, false);	
+	
+	
+	  var datos=[['0',1.8,2.5,0.4,7.3],['1',4.9,1.9,1.2,0.2],
+    	  ['2',0.8,0.8,0.1,0.1]];
+	  
+	  drawCurveTypes(datos,"chart_div77");
+	  
+	  datos=[['0',3.7,1.0,0.4,0.1],['1',1.1,0.0,0.1,0.6],
+    	  ['2',0.4,0.8,0.2,0.2]];
+	  
+	  drawCurveTypes(datos,"chart_div45");
+	  
+	  datos=[['0',1.7,0.5,0.4,0.2],['1',1.2,0.4,0.4,0.4],
+    	  ['2',0.6,0.3,0.1,0.1]];
+	  
+	  drawCurveTypes(datos,"chart_div14");
+	  
+	  drawChartComparativa(datos,"chart_divComparativa");
+	  
+	  $( "div[id^='chart_div']" ).hide();
+	  
+	  $( "div[id^='chart_div77']" ).show();
 	
 }
- function cargarDatos(e) {
-		var contenido="";
-		 var archivo = e.target.files[0];
-		  if (!archivo) {
-		    return;
-		  }
-		  var lector = new FileReader();
-		  lector.onload = function(e) {
-		      contenido = e.target.result;
-		  }
-		  lector.readAsText(archivo);
-		  
-		  drawCurveTypes(lector.result);
-		
 
-	}
-	
  
- function drawCurveTypes(contenido) {
+ function drawCurveTypes(datos,contenedor) {
        var data = new google.visualization.DataTable();
        
        data.addColumn('string', 'X');
        data.addColumn('number', 'Indice');
-       data.addColumn('number', 'Pulgar');
+       data.addColumn('number', 'Medio');
        data.addColumn('number', 'Anular');
        data.addColumn('number', 'Meñique');
        
-      console.log(contenido);
-   		contenido = contenido.substring(0,contenido.length-1)
-   	
-      var datos = JSON.parse("[" + contenido + "]");
-      console.log(datos);
-     // var datos=[['0',0.3,3.0,1.8,3.5],['1',0.3,1.4,1.8,3.5],['2',2.3,6.4,0.8,5.5],['3',1.3,1.4,2.8,7.5],['4',0.3,1.4,1.8,3.5]];
+    
        data.addRows(datos);
 
        var options = {
-         hAxis: { title: 'Distancia con el Pulgar'},
+         hAxis: { title: 'Toma de datos - distancia con el Pulgar'},
          vAxis: { title: 'Dedos',scaleType: 'linear',},
          tooltip: {isHtml: true},
        	 lineWidth: 5,
@@ -62,10 +63,36 @@ function init(){
         
        };
 
-       var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+       var chart = new google.visualization.LineChart(document.getElementById(contenedor));
        chart.draw(data, options);
      }
+ function drawChartComparativa(datos,contenedor) {
+     var data = google.visualization.arrayToDataTable([
+       ['Dedo', '77 Años', '45 años', '14 años'],
+       ['Indice', 2.1, 1.6, 0.3],
+       ['Medio', 1.9, 1.1, 1.0],
+       ['Anular', 3.1, 0.3, 0.1],
+       ['Meñique', 2.1, 0.3, 0.1]
+     ]);
+
+     var options = {
+       title: 'Comparativa pacientes por edades',
+       hAxis: {title: 'Month'},   
+       seriesType: 'bars',
+       legend: {position: 'bottom'},
+     };
+
+     var chart = new google.visualization.ComboChart(document.getElementById(contenedor));
+
+     chart.draw(data, options);
+   }
  
+ function mostrar(ident){
+	 $( "div[id^='chart_div']" ).hide();
+	 $('#'+ident).show();
+	 
+	 
+ }
  </script> 
 </head>
 <body onload="init()">
@@ -74,15 +101,46 @@ function init(){
 <h2>Centro de Pruebas</h2>
 <div id="menubar">
 
-<a class="boton_personalizado" href="index.html"><u>LOGS</u></a>
+<a class="boton_personalizado" href="index.html"><span style="text-decoration: underline;">CAPTURA</span></a>
 <a class="boton_personalizado" href="">AN&Aacute;LISIS</a>
 
 </div>
 <br>
-<h3>Cargar Datos</h3>
-<input id="ficheroSalMinGraf" placeholder="Cargar datos" type="file" /></div>
+<h3>Aálisis de datos</h3>
+	<div id="container">
+		<!--Pestaña 1 activa por defecto-->
+	    <input id="tab-1" type="radio" name="tab-group" checked="checked" onclick="javascript:mostrar('chart_div77')" />
+	    <label for="tab-1">Paciente 77 años</label>
+	    <!--Pestaña 2 inactiva por defecto-->
+	    <input id="tab-2" type="radio" name="tab-group" onclick="javascript:mostrar('chart_div45')"/>
+	    <label for="tab-2">Paciente 45 años </label>
+	    <!--Pestaña 3 inactiva por defecto-->
+	    <input id="tab-3" type="radio" name="tab-group" onclick="javascript:mostrar('chart_div14')"/>
+	    <label for="tab-3">Paciente 14 años</label>
+	     <!--Pestaña 3 inactiva por defecto-->
+	    <input id="tab-4" type="radio" name="tab-group" onclick="javascript:mostrar('chart_divComparativa')"/>
+	    <label for="tab-4">Comparativa</label>
+	        <!--Contenido a mostrar/ocultar-->
+	    <div id="content">
+	    	<!--Contenido de la Pestaña 1-->
+	        <div id="content-1">
+ 					<div id="chart_div77" style="width: 1000px; height: 500px"></div>	 				    
+ 			</div>
+	        <!--Contenido de la Pestaña 2-->
+	        <div id="content-2">
+				  <div id="chart_div45" style="width: 1000px; height: 500px"></div>	        </div>
+	        <!--Contenido de la Pestaña 3-->
+	        <div id="content-3">
+	 			 <div id="chart_div14" style="width: 1000px; height: 500px"></div>	        </div>
+	 			  <!--Contenido de la Pestaña 3-->
+	        <div id="content-4">
+	 			 <div id="chart_divComparativa" style="width: 900px; height: 500px"></div>	        </div>
+	    </div>
+	    
+	   
+	</div>
+	    
 
-  <div id="chart_div" style="width: 1300px; height: 700px"></div>
 </body>
 </html>
 
